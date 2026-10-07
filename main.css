@@ -10,14 +10,11 @@
   --bad:#ff526f;
 }
 
-*{
-  box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
   margin:0;
-  background:
-    radial-gradient(circle at 10% 0,#272261,#070a18 42%);
+  background:radial-gradient(circle at 10% 0,#272261,#070a18 42%);
   color:var(--text);
   font-family:Inter,system-ui,Arial,sans-serif;
 }
@@ -27,8 +24,6 @@ body{
   margin:auto;
   padding:14px;
 }
-
-/* HEADER */
 
 .top{
   display:flex;
@@ -49,8 +44,6 @@ body{
   flex-wrap:wrap;
 }
 
-/* CARD */
-
 .card{
   background:linear-gradient(180deg,#121938f5,#0c112cf5);
   border:1px solid var(--line);
@@ -59,24 +52,6 @@ body{
   margin-bottom:13px;
   box-shadow:0 15px 40px #0004;
 }
-
-.hero{
-  padding:18px 4px;
-}
-
-.hero h1{
-  font-size:32px;
-  margin:5px 0;
-}
-
-.eyebrow{
-  font-size:11px;
-  letter-spacing:1.5px;
-  font-weight:900;
-  color:#8fa0ff;
-}
-
-/* GRID */
 
 .grid{
   display:grid;
@@ -92,7 +67,7 @@ body{
 }
 
 /* =========================
-   DANH SÁCH MÔN HỌC
+   MÔN HỌC
    2 MÔN / 1 HÀNG
    ========================= */
 
@@ -121,25 +96,17 @@ body{
   border-left:4px solid var(--subject-color,#7457ff);
 
   border-radius:15px;
-
   padding:15px;
 
   cursor:pointer;
 
-  transition:
-    transform .15s ease,
-    border-color .15s ease,
-    background .15s ease;
+  transition:.15s ease;
 }
 
 .subject:hover{
-  border-color:#8191ff;
   transform:translateY(-2px);
   background:#171f47;
-}
-
-.subject:active{
-  transform:scale(.99);
+  border-color:#8191ff;
 }
 
 .subject-icon{
@@ -152,7 +119,6 @@ body{
   flex:none;
 
   border-radius:16px;
-
   background:#1a2147;
 
   font-size:30px;
@@ -165,7 +131,6 @@ body{
 
 .subject-body h3{
   margin:0 0 5px;
-
   font-size:18px;
   font-weight:800;
 
@@ -176,9 +141,7 @@ body{
 
 .subject-body p{
   margin:0;
-
   color:var(--muted);
-
   font-size:13px;
 
   overflow:hidden;
@@ -189,20 +152,16 @@ body{
 
 .arrow{
   margin-left:auto;
-
   flex:none;
-
   font-size:28px;
-
   color:#9ca9d8;
 }
 
-/* BUTTON */
+/* =========================
+   BUTTON
+   ========================= */
 
-button,
-input,
-select,
-textarea{
+button,input,select,textarea{
   font:inherit;
 }
 
@@ -232,7 +191,13 @@ button{
   background:#60182e;
 }
 
-/* FORM */
+.success{
+  background:#126c50;
+}
+
+/* =========================
+   FORM
+   ========================= */
 
 .field{
   margin:9px 0;
@@ -245,9 +210,7 @@ button{
   margin-bottom:5px;
 }
 
-input,
-select,
-textarea{
+input,select,textarea{
   width:100%;
   background:#080e28;
   color:#fff;
@@ -264,13 +227,9 @@ textarea{
   color:var(--muted);
 }
 
-h1,
-h2,
-h3{
+h1,h2,h3{
   margin:0 0 9px;
 }
-
-/* ROW */
 
 .row{
   display:flex;
@@ -283,28 +242,99 @@ h3{
   margin-left:auto;
 }
 
-/* KPI */
-
 .kpi{
   display:flex;
   gap:8px;
   flex-wrap:wrap;
 }
 
-.kpi span,
-.tag{
+.kpi span,.tag{
   padding:8px 10px;
   background:#0b1230;
   border:1px solid #303b6b;
   border-radius:10px;
 }
 
-/* EXAM */
+.notice{
+  padding:11px;
+  border:1px solid #435487;
+  border-radius:10px;
+  background:#10173a;
+}
+
+.center{
+  text-align:center;
+}
+
+.empty{
+  text-align:center;
+  padding:35px;
+}
+
+/* =========================
+   ADMIN MÔN HỌC
+   ========================= */
+
+.subject-admin-list{
+  display:grid;
+  gap:10px;
+}
+
+.subject-admin-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+
+  padding:12px;
+
+  border:1px solid #303b6b;
+  border-radius:13px;
+
+  background:#0e1534;
+}
+
+.subject-admin-icon{
+  width:48px;
+  height:48px;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:12px;
+
+  font-size:25px;
+  flex:none;
+}
+
+.subject-admin-info{
+  flex:1;
+  min-width:0;
+}
+
+.subject-admin-info b{
+  display:block;
+  font-size:16px;
+}
+
+.subject-admin-info small{
+  color:var(--muted);
+}
+
+.status-active{
+  color:#46dfa7;
+}
+
+.status-hidden{
+  color:#ff7189;
+}
+
+/* =========================
+   EXAM / QUESTION
+   ========================= */
 
 .exam{
   display:block;
   width:100%;
-
   text-align:left;
 
   background:#121a3c;
@@ -317,22 +347,14 @@ h3{
   margin:8px 0;
 }
 
-/* OPTIONS */
-
 .option{
   padding:10px;
-
   border:1px solid #303b6b;
   border-radius:9px;
-
   background:#11183b;
-
   margin:6px 0;
-
   text-align:left;
-
   width:100%;
-
   color:#fff;
 }
 
@@ -341,57 +363,29 @@ h3{
   background:#20285b;
 }
 
-/* TIMER */
-
 .timer{
   font-weight:900;
   font-size:22px;
-
   background:#211d62;
   border:1px solid #6678ff;
-
   padding:8px 12px;
-
   border-radius:11px;
 }
-
-/* TABLE */
 
 .table{
   width:100%;
   border-collapse:collapse;
 }
 
-.table th,
-.table td{
+.table th,.table td{
   padding:8px;
   border-bottom:1px solid #2b3561;
   text-align:left;
 }
 
-/* NOTICE */
-
-.notice{
-  padding:11px;
-
-  border:1px solid #435487;
-  border-radius:10px;
-
-  background:#10173a;
-}
-
-/* EMPTY */
-
-.empty{
-  text-align:center;
-  padding:35px;
-}
-
-.empty-icon{
-  font-size:45px;
-}
-
-/* ADMIN */
+/* =========================
+   ADMIN
+   ========================= */
 
 .admin-head{
   display:flex;
@@ -430,21 +424,13 @@ h3{
   color:var(--muted);
 }
 
-.admin-subject{
-  cursor:default;
-}
-
 .compact{
   padding:12px;
 }
 
-/* CENTER */
-
-.center{
-  text-align:center;
-}
-
-/* MOBILE */
+/* =========================
+   MOBILE
+   ========================= */
 
 @media(max-width:720px){
 
@@ -452,20 +438,17 @@ h3{
     padding:9px;
   }
 
-  .two,
-  .three{
-    grid-template-columns:1fr;
-  }
-
   .top{
     align-items:flex-start;
     flex-direction:column;
   }
 
-  /*
-     Điện thoại:
-     1 môn / 1 hàng
-  */
+  .two,.three{
+    grid-template-columns:1fr;
+  }
+
+  /* điện thoại: 1 môn / hàng */
+
   .subjects{
     grid-template-columns:1fr;
   }
@@ -473,9 +456,11 @@ h3{
   .admin-grid{
     grid-template-columns:1fr 1fr;
   }
-}
 
-/* MÀN HÌNH RẤT NHỎ */
+  .subject-admin-item{
+    align-items:flex-start;
+  }
+}
 
 @media(max-width:440px){
 
