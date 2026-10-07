@@ -1,1 +1,638 @@
-:root{--bg:#070a18;--card:#111735;--line:#34416f;--text:#f5f7ff;--muted:#aeb9dc;--a:#7457ff;--b:#159fe8}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0,#272261,#070a18 42%);color:var(--text);font-family:Inter,system-ui,Arial,sans-serif}.wrap{max-width:1180px;margin:auto;padding:14px}.top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:14px}.brand{font-size:24px;font-weight:900}.nav{display:flex;gap:7px;flex-wrap:wrap}.card{background:linear-gradient(180deg,#121938f5,#0c112cf5);border:1px solid var(--line);border-radius:17px;padding:16px;margin-bottom:13px;box-shadow:0 15px 40px #0004}.hero{padding:18px 4px}.hero h1{font-size:32px;margin:5px 0}.eyebrow{font-size:11px;letter-spacing:1.5px;font-weight:900;color:#8fa0ff}.grid{display:grid;gap:12px}.subjects{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}.two{grid-template-columns:1fr 1fr}.three{grid-template-columns:repeat(3,1fr)}button,input,select,textarea{font:inherit}button{cursor:pointer}.btn{border:1px solid #405083;background:#171f45;color:#fff;border-radius:10px;padding:10px 13px;font-weight:700}.primary{background:linear-gradient(135deg,var(--a),var(--b));border:0}.danger{background:#60182e}.subject{width:100%;display:flex;align-items:center;gap:13px;text-align:left;background:#121a3c;color:#fff;border:1px solid #3b487a;border-left:4px solid var(--subject-color,#7457ff);border-radius:15px;padding:15px;min-height:105px}.subject:hover{border-color:#8191ff}.subject-icon{width:56px;height:56px;display:grid;place-items:center;border-radius:16px;background:#1a2147;font-size:30px;flex:none}.subject-body{min-width:0}.subject-body h3{margin:0 0 5px}.subject-body p{margin:0;color:var(--muted);font-size:13px}.arrow{margin-left:auto;font-size:28px;color:#9ca9d8}.field{margin:9px 0}.field label{display:block;color:#bdc7e8;font-size:13px;margin-bottom:5px}input,select,textarea{width:100%;background:#080e28;color:#fff;border:1px solid #3b487a;border-radius:10px;padding:10px}textarea{min-height:120px}.muted{color:var(--muted)}h1,h2,h3{margin:0 0 9px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.right{margin-left:auto}.kpi{display:flex;gap:8px;flex-wrap:wrap}.kpi span,.tag{padding:8px 10px;background:#0b1230;border:1px solid #303b6b;border-radius:10px}.exam{display:block;width:100%;text-align:left;background:#121a3c;color:#fff;border:1px solid #3b487a;border-radius:15px;padding:15px;margin:8px 0}.option{padding:10px;border:1px solid #303b6b;border-radius:9px;background:#11183b;margin:6px 0;text-align:left;width:100%;color:#fff}.option.sel{border-color:#7c8cff;background:#20285b}.timer{font-weight:900;font-size:22px;background:#211d62;border:1px solid #6678ff;padding:8px 12px;border-radius:11px}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:8px;border-bottom:1px solid #2b3561;text-align:left}.notice{padding:11px;border:1px solid #435487;border-radius:10px;background:#10173a}.empty{text-align:center;padding:35px}.empty-icon{font-size:45px}.admin-head{display:flex;justify-content:space-between;align-items:center}.admin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.admin-card{display:flex;flex-direction:column;align-items:flex-start;gap:7px;background:#121a3c;color:#fff;border:1px solid #3b487a;border-radius:15px;padding:18px;text-align:left}.admin-card span{font-size:30px}.admin-card small{color:var(--muted)}.admin-subject{cursor:default}.compact{padding:12px}@media(max-width:720px){.wrap{padding:9px}.two,.three{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.admin-grid{grid-template-columns:1fr 1fr}.admin-head{align-items:flex-start;flex-direction:column}}@media(max-width:440px){.admin-grid{grid-template-columns:1fr}}
+:root{
+  --bg:#070a18;
+  --card:#111735;
+  --line:#34416f;
+  --text:#f5f7ff;
+  --muted:#aeb9dc;
+  --a:#7457ff;
+  --b:#159fe8;
+  --ok:#19bd7a;
+  --bad:#e95472;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 10% 0,#272261,#070a18 42%);
+  color:var(--text);
+  font-family:Inter,system-ui,Arial,sans-serif;
+  min-height:100vh;
+}
+
+.wrap{
+  max-width:1180px;
+  margin:auto;
+  padding:14px;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  margin-bottom:18px;
+  padding:4px 0;
+}
+
+.brand{
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:-.4px;
+}
+
+.nav{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+}
+
+/* =========================
+   CARD
+========================= */
+
+.card{
+  background:linear-gradient(
+    180deg,
+    #121938f5,
+    #0c112cf5
+  );
+  border:1px solid var(--line);
+  border-radius:17px;
+  padding:16px;
+  margin-bottom:13px;
+  box-shadow:0 15px 40px #0004;
+}
+
+.hero{
+  padding:18px 4px;
+}
+
+.hero h1{
+  font-size:32px;
+  margin:5px 0;
+}
+
+.eyebrow{
+  font-size:11px;
+  letter-spacing:1.5px;
+  font-weight:900;
+  color:#8fa0ff;
+}
+
+/* =========================
+   GRID
+========================= */
+
+.grid{
+  display:grid;
+  gap:12px;
+}
+
+/*
+   MÔN HỌC
+   2 ô ngang trên desktop
+*/
+
+.subjects{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+/* Các grid khác */
+
+.two{
+  grid-template-columns:1fr 1fr;
+}
+
+.three{
+  grid-template-columns:repeat(3,1fr);
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+button,
+input,
+select,
+textarea{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.btn{
+  border:1px solid #405083;
+  background:#171f45;
+  color:#fff;
+  border-radius:10px;
+  padding:10px 13px;
+  font-weight:700;
+  transition:.18s ease;
+}
+
+.btn:hover{
+  border-color:#8191ff;
+  transform:translateY(-1px);
+}
+
+.primary{
+  background:linear-gradient(
+    135deg,
+    var(--a),
+    var(--b)
+  );
+  border:0;
+}
+
+.danger{
+  background:#60182e;
+}
+
+.good{
+  background:#0d6847;
+}
+
+/* =========================
+   Ô MÔN HỌC
+========================= */
+
+.subject{
+  width:100%;
+  min-height:112px;
+
+  display:flex;
+  align-items:center;
+  gap:14px;
+
+  text-align:left;
+
+  background:#121a3c;
+  color:#fff;
+
+  border:1px solid #3b487a;
+  border-left:4px solid var(
+    --subject-color,
+    #7457ff
+  );
+
+  border-radius:15px;
+  padding:16px;
+
+  transition:
+    transform .18s ease,
+    border-color .18s ease,
+    background .18s ease,
+    box-shadow .18s ease;
+}
+
+.subject:hover{
+  border-color:#8191ff;
+  background:#161f49;
+  transform:translateY(-2px);
+  box-shadow:0 10px 25px #0004;
+}
+
+.subject:active{
+  transform:scale(.99);
+}
+
+/* Icon môn */
+
+.subject-icon{
+  width:58px;
+  height:58px;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:16px;
+
+  background:#1a2147;
+
+  font-size:30px;
+
+  flex:none;
+
+  border:1px solid #303b6b;
+}
+
+/* Nội dung môn */
+
+.subject-body{
+  min-width:0;
+  flex:1;
+}
+
+.subject-body h3{
+  margin:0 0 5px;
+  font-size:18px;
+  line-height:1.25;
+}
+
+.subject-body p{
+  margin:0;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.45;
+}
+
+/* Mũi tên */
+
+.arrow{
+  margin-left:auto;
+  font-size:28px;
+  color:#9ca9d8;
+  flex:none;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.field{
+  margin:9px 0;
+}
+
+.field label{
+  display:block;
+  color:#bdc7e8;
+  font-size:13px;
+  margin-bottom:5px;
+}
+
+input,
+select,
+textarea{
+  width:100%;
+
+  background:#080e28;
+  color:#fff;
+
+  border:1px solid #3b487a;
+  border-radius:10px;
+
+  padding:10px;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  outline:none;
+  border-color:#8191ff;
+  box-shadow:0 0 0 2px #7457ff22;
+}
+
+textarea{
+  min-height:120px;
+  resize:vertical;
+}
+
+/* =========================
+   TEXT
+========================= */
+
+.muted{
+  color:var(--muted);
+}
+
+h1,
+h2,
+h3{
+  margin:0 0 9px;
+}
+
+.row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.right{
+  margin-left:auto;
+}
+
+/* =========================
+   KPI
+========================= */
+
+.kpi{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.kpi span,
+.tag{
+  padding:8px 10px;
+  background:#0b1230;
+  border:1px solid #303b6b;
+  border-radius:10px;
+}
+
+/* =========================
+   BÀI KIỂM TRA
+========================= */
+
+.exam{
+  display:block;
+  width:100%;
+
+  text-align:left;
+
+  background:#121a3c;
+  color:#fff;
+
+  border:1px solid #3b487a;
+  border-radius:15px;
+
+  padding:15px;
+  margin:8px 0;
+
+  transition:.18s ease;
+}
+
+.exam:hover{
+  border-color:#8191ff;
+  background:#161f49;
+}
+
+/* =========================
+   CÂU HỎI / ĐÁP ÁN
+========================= */
+
+.question{
+  background:#0b1230;
+  border:1px solid #303b6b;
+  border-radius:12px;
+  padding:13px;
+  margin:9px 0;
+}
+
+.option{
+  padding:10px;
+
+  border:1px solid #303b6b;
+  border-radius:9px;
+
+  background:#11183b;
+
+  margin:6px 0;
+
+  text-align:left;
+
+  width:100%;
+
+  color:#fff;
+
+  transition:.15s ease;
+}
+
+.option:hover{
+  border-color:#7c8cff;
+}
+
+.option.sel{
+  border-color:#7c8cff;
+  background:#20285b;
+}
+
+/* =========================
+   TIMER
+========================= */
+
+.timer{
+  font-weight:900;
+  font-size:22px;
+
+  background:#211d62;
+
+  border:1px solid #6678ff;
+
+  padding:8px 12px;
+
+  border-radius:11px;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.table th,
+.table td{
+  padding:8px;
+  border-bottom:1px solid #2b3561;
+  text-align:left;
+}
+
+/* =========================
+   NOTICE / EMPTY
+========================= */
+
+.notice{
+  padding:11px;
+
+  border:1px solid #435487;
+  border-radius:10px;
+
+  background:#10173a;
+}
+
+.empty{
+  text-align:center;
+  padding:35px;
+}
+
+.empty-icon{
+  font-size:45px;
+}
+
+/* =========================
+   ADMIN
+========================= */
+
+.admin-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.admin-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+
+.admin-card{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:7px;
+
+  background:#121a3c;
+  color:#fff;
+
+  border:1px solid #3b487a;
+  border-radius:15px;
+
+  padding:18px;
+
+  text-align:left;
+}
+
+.admin-card:hover{
+  border-color:#8191ff;
+}
+
+.admin-card span{
+  font-size:30px;
+}
+
+.admin-card small{
+  color:var(--muted);
+}
+
+.admin-subject{
+  cursor:default;
+}
+
+/* =========================
+   UTILITY
+========================= */
+
+.compact{
+  padding:12px;
+}
+
+.center{
+  text-align:center;
+}
+
+.score{
+  font-size:52px;
+  font-weight:900;
+  margin:10px 0;
+}
+
+.narrow{
+  max-width:440px;
+  margin:auto;
+}
+
+.submit{
+  width:100%;
+  padding:14px;
+  margin-bottom:20px;
+}
+
+.table-wrap{
+  overflow:auto;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:720px){
+
+  .wrap{
+    padding:9px;
+  }
+
+  .top{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .brand{
+    font-size:22px;
+  }
+
+  /*
+     Trên điện thoại:
+     1 môn / 1 hàng
+  */
+
+  .subjects{
+    grid-template-columns:1fr;
+  }
+
+  .two,
+  .three{
+    grid-template-columns:1fr;
+  }
+
+  .subject{
+    min-height:88px;
+    padding:13px;
+  }
+
+  .subject-icon{
+    width:52px;
+    height:52px;
+    font-size:27px;
+  }
+
+  .subject-body h3{
+    font-size:17px;
+  }
+
+  .admin-grid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .admin-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
+
+/* =========================
+   ĐIỆN THOẠI NHỎ
+========================= */
+
+@media(max-width:440px){
+
+  .admin-grid{
+    grid-template-columns:1fr;
+  }
+
+  .subject{
+    min-height:84px;
+  }
+
+  .subject-icon{
+    width:48px;
+    height:48px;
+    font-size:25px;
+  }
+
+  .arrow{
+    font-size:23px;
+  }
+
+  .hero h1{
+    font-size:27px;
+  }
+}
