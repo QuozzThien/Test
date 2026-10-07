@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#070a18">
+  <title>Admin - Luyện Thi</title>
+  <link rel="stylesheet" href="../main.css?v=11">
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <script>
+    window.ADMIN_MODE = true;
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config.js?v=11"></script>
+  <script src="../app.js?v=11"></script>
+
+  <!-- Quản lý môn học riêng -->
+  <script src="../subjects.js?v=11"></script>
+
+  <script src="../ai.js?v=11"></script>
+</body>
+</html>
