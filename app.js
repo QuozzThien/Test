@@ -1,227 +1,815 @@
-const C=window.APP_CONFIG||{};let sb=null;let SUPABASE_INIT_ERROR=null;function initSupabase(){try{if(!C.SUPABASE_URL||!C.SUPABASE_ANON_KEY||String(C.SUPABASE_ANON_KEY).includes('DAN_'))throw new Error('Thiếu SUPABASE_URL hoặc SUPABASE_ANON_KEY trong config.js');if(!window.supabase||typeof window.supabase.createClient!=='function')throw new Error('Không tải được thư viện Supabase JS.');sb=window.supabase.createClient(C.SUPABASE_URL,C.SUPABASE_ANON_KEY);}catch(e){SUPABASE_INIT_ERROR=e;sb=null}}initSupabase();
-let S={page:'home',subject:null,lesson:null,exam:null,attempt:null,answers:{},seconds:0,timer:null,user:null,result:null};window.TRACNGHIEM={get sb(){return sb},config:C,state:S,get initError(){return SUPABASE_INIT_ERROR},go};
-const fallback=[['Công nghệ','⚙️'],['Toán','∑'],['Tiếng Anh','A'],['Vật lí','⚡'],['Địa lí','🌍'],['Lịch sử','🏛️'],['GDKT&PL','⚖️']];
-const esc=x=>String(x??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
+const C=window.APP_CONFIG||{};
+const ADMIN_MODE=window.ADMIN_MODE===true;
+
+const sb=window.supabase?.createClient
+  ?window.supabase.createClient(C.SUPABASE_URL,C.SUPABASE_ANON_KEY)
+  :null;
+
 const root=document.getElementById('app');
 
-function layout(body){
-root.innerHTML=`<div class="wrap"><header class="top"><div><div class="brand">KHO TRẮC NGHIỆM ĐA MÔN</div><span class="tag">Học sinh làm bài • Admin quản trị</span></div><div class="nav"><button class="btn" onclick="go('home')">Môn học</button><button class="btn" onclick="go('ranking')">Xếp hạng</button>${S.user?`<button class="btn" onclick="go('admin')">Quản trị</button><button class="btn" onclick="logout()">Đăng xuất</button>`:`<button class="btn" onclick="go('login')">Admin</button>`}</div></header>${body}</div>`
+const S={
+  page:ADMIN_MODE?'login':'home',
+  user:null,
+  subject:null,
+  lesson:null,
+  exam:null,
+  questions:[],
+  answers:{},
+  result:null
+};
+
+function esc(s){
+  return String(s??'')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
 }
 
-async function go(p){stopTimer();S.page=p;await render()}
-async function render(){if(S.page==='home')return home();if(S.page==='lessons')return lessons();if(S.page==='exams')return exams();if(S.page==='info')return info();if(S.page==='take')return take();if(S.page==='result')return result();if(S.page==='ranking')return ranking();if(S.page==='login')return login();if(S.page==='admin')return admin();}
+function go(p){
+  S.page=p;
+  render();
+  window.scrollTo(0,0);
+}
+
+function layout(body){
+  root.innerHTML=`
+    <div class="wrap">
+      <header class="top">
+        <div>
+          <div class="brand">KHO TRẮC NGHIỆM ĐA MÔN</div>
+          <span class="tag">
+            ${ADMIN_MODE?'Khu vực quản trị':'Học sinh làm bài'}
+          </span>
+        </div>
+
+        <div class="nav">
+          ${
+            ADMIN_MODE
+            ?`
+              <button class="btn" onclick="go('admin')">Quản trị</button>
+              ${S.user?`<button class="btn" onclick="logout()">Đăng xuất</button>`:''}
+            `
+            :`
+              <button class="btn" onclick="go('home')">Môn học</button>
+              <button class="btn" onclick="go('ranking')">Xếp hạng</button>
+            `
+          }
+        </div>
+      </header>
+
+      ${body}
+    </div>
+  `;
+}
+
+/* =========================
+   PUBLIC
+========================= */
 
 async function home(){
-let subs=[];
-if(sb){let r=await sb.from('subjects').select('*').eq('is_active',true).order('sort_order');subs=r.data||[]}
-if(!subs.length)subs=fallback.map((x,i)=>({id:'f'+i,name:x[0],icon:x[1]}));
-layout(`<section class="card"><h1>Chọn môn học</h1><p class="muted">Chọn môn → chọn bài → nhập tên và lớp → làm bài → điểm được lưu để xếp hạng.</p></section><section class="grid subjects">${subs.map(x=>`<button class="subject" onclick="chooseSubject('${x.id}')"><h3>${x.icon||'📘'} ${esc(x.name)}</h3><span class="muted">Xem các bài kiểm tra</span></button>`).join('')}</section>`)
+  if(!sb)return layout(`
+    <section class="card">
+      <h2>Không kết nối được Supabase</h2>
+    </section>
+  `);
+
+  const {data,error}=await sb
+    .from('subjects')
+    .select('*')
+    .order('name');
+
+  if(error){
+    return layout(`
+      <section class="card">
+        <h2>Lỗi tải môn học</h2>
+        <p>${esc(error.message)}</p>
+      </section>
+    `);
+  }
+
+  return layout(`
+    <section class="hero">
+      <h1>Kho trắc nghiệm đa môn</h1>
+      <p>Chọn môn học để bắt đầu.</p>
+    </section>
+
+    <section class="grid">
+      ${(data||[]).map(x=>`
+        <button class="card subject"
+          onclick='openSubject(${JSON.stringify(x)})'>
+          <h2>${esc(x.name)}</h2>
+          ${x.description?`<p>${esc(x.description)}</p>`:''}
+        </button>
+      `).join('')}
+    </section>
+  `);
 }
 
-async function chooseSubject(id){S.subject=id;S.lesson=null;go('lessons')}
+function openSubject(x){
+  S.subject=x;
+  go('lessons');
+}
 
 async function lessons(){
-if(!sb)return layout(`<section class="card"><h2>Chưa kết nối Supabase</h2><p class="muted">Điền URL và anon key trong js/config.js.</p></section>`);
-let r=await sb.from('lessons').select('*').eq('subject_id',S.subject).eq('is_active',true).order('sort_order');
-layout(`<section class="card"><button class="btn" onclick="go('home')">← Môn</button><h2 style="margin-top:10px">Chọn bài</h2>${(r.data||[]).map(x=>`<button class="exam" onclick="chooseLesson('${x.id}')"><b>${esc(x.title)}</b><div class="muted">${esc(x.description||'')}</div></button>`).join('')||'<p class="muted">Chưa có bài.</p>'}</section>`)
+  const {data,error}=await sb
+    .from('lessons')
+    .select('*')
+    .eq('subject_id',S.subject.id)
+    .order('sort_order')
+    .order('name');
+
+  if(error)return layout(`
+    <section class="card">
+      <h2>Lỗi</h2>
+      <p>${esc(error.message)}</p>
+    </section>
+  `);
+
+  return layout(`
+    <section class="card">
+      <button class="btn" onclick="go('home')">← Quay lại</button>
+      <h1>${esc(S.subject.name)}</h1>
+      <p>Chọn bài/chủ đề.</p>
+    </section>
+
+    <section class="grid">
+      ${(data||[]).map(x=>`
+        <button class="card"
+          onclick='openLesson(${JSON.stringify(x)})'>
+          <h2>${esc(x.name)}</h2>
+          ${x.description?`<p>${esc(x.description)}</p>`:''}
+        </button>
+      `).join('')}
+    </section>
+  `);
 }
 
-function chooseLesson(id){S.lesson=id;go('exams')}
+function openLesson(x){
+  S.lesson=x;
+  go('exams');
+}
 
 async function exams(){
-let r=await sb.from('exams').select('*').eq('subject_id',S.subject).eq('lesson_id',S.lesson).eq('is_published',true).order('created_at',{ascending:false});
-layout(`<section class="card"><button class="btn" onclick="go('lessons')">← Bài</button><h2 style="margin-top:10px">Chọn bài kiểm tra</h2>${(r.data||[]).map(e=>`<button class="exam" onclick="openInfo('${e.id}')"><b>${esc(e.title)}</b><div class="muted">${e.question_count} câu • ${e.minutes} phút • ${e.attempt_limit===0?'Không giới hạn lượt':e.attempt_limit+' lượt'}</div></button>`).join('')||'<p class="muted">Chưa có đề được mở.</p>'}</section>`)
+  const {data,error}=await sb
+    .from('exams')
+    .select('*')
+    .eq('lesson_id',S.lesson.id)
+    .eq('is_published',true)
+    .order('created_at',{ascending:false});
+
+  if(error)return layout(`
+    <section class="card">
+      <h2>Lỗi</h2>
+      <p>${esc(error.message)}</p>
+    </section>
+  `);
+
+  return layout(`
+    <section class="card">
+      <button class="btn" onclick="go('lessons')">← Quay lại</button>
+      <h1>${esc(S.lesson.name)}</h1>
+      <p>Chọn đề thi.</p>
+    </section>
+
+    <section class="grid">
+      ${(data||[]).map(x=>`
+        <button class="card"
+          onclick='openExam(${JSON.stringify(x)})'>
+          <h2>${esc(x.title||x.name)}</h2>
+          ${x.description?`<p>${esc(x.description)}</p>`:''}
+          <p>
+            ${x.duration_minutes?`${x.duration_minutes} phút`:''}
+            ${x.question_count?` • ${x.question_count} câu`:''}
+          </p>
+        </button>
+      `).join('')}
+    </section>
+  `);
 }
 
-async function openInfo(id){S.exam=id;go('info')}
-
-async function info(){
-let {data:e}=await sb.from('exams').select('*').eq('id',S.exam).single();
-layout(`<section class="card"><h2>${esc(e.title)}</h2><div class="kpi"><span>${e.question_count} câu</span><span>${e.minutes} phút</span><span>${e.attempt_limit===0?'Không giới hạn lượt':e.attempt_limit+' lượt'}</span></div><div class="field"><label>Họ và tên</label><input id="name" placeholder="Nhập họ và tên"></div><div class="field"><label>Lớp</label><input id="cls" placeholder="Ví dụ: 12A3"></div><button class="btn primary" onclick="begin()">BẮT ĐẦU LÀM BÀI</button></section>`)
+function openExam(x){
+  S.exam=x;
+  go('info');
 }
 
-async function begin(){
-let name=document.getElementById('name').value.trim(),cls=document.getElementById('cls').value.trim();
-if(!name||!cls)return alert('Vui lòng nhập họ tên và lớp.');
-let {data:e}=await sb.from('exams').select('*').eq('id',S.exam).single();
-if(e.attempt_limit>0){
-let q=await sb.from('attempts').select('id',{count:'exact',head:true}).eq('exam_id',e.id).ilike('student_name',name).ilike('student_class',cls);
-if((q.count||0)>=e.attempt_limit)return alert(`Bạn đã đạt giới hạn ${e.attempt_limit} lượt làm bài.`)
-}
-let forms=await sb.from('exam_forms').select('*').eq('exam_id',e.id);
-let form=(forms.data||[])[Math.floor(Math.random()*(forms.data||[]).length)];
-if(!form)return alert('Đề chưa được tạo mã đề.');
-let qs=await sb.from('exam_questions').select('position,question_id,questions(id,question_text,options)').eq('exam_form_id',form.id).order('position');
-S.attempt={exam:e,form,name,cls,questions:qs.data||[]};S.answers={};S.seconds=e.minutes*60;S.page='take';await render();startTimer()
+function info(){
+  return layout(`
+    <section class="card">
+      <button class="btn" onclick="go('exams')">← Quay lại</button>
+
+      <h1>${esc(S.exam.title||S.exam.name)}</h1>
+
+      ${
+        S.exam.description
+        ?`<p>${esc(S.exam.description)}</p>`
+        :''
+      }
+
+      <div class="info-box">
+        <p><b>Thời gian:</b>
+          ${S.exam.duration_minutes||0} phút
+        </p>
+
+        <p><b>Số câu:</b>
+          ${S.exam.question_count||'Theo đề'}
+        </p>
+
+        <p><b>Số lần làm:</b>
+          ${
+            S.exam.max_attempts===0||S.exam.max_attempts==null
+            ?'Không giới hạn'
+            :S.exam.max_attempts
+          }
+        </p>
+      </div>
+
+      <button class="btn primary" onclick="startExam()">
+        Bắt đầu làm bài
+      </button>
+    </section>
+  `);
 }
 
-function startTimer(){
-stopTimer();
-S.timer=setInterval(()=>{
-S.seconds--;
-let t=document.getElementById('timer');
-if(t)t.textContent=fmt(S.seconds);
-if(S.seconds<=0){stopTimer();submit(true)}
-},1000)
-}
+async function startExam(){
+  const {data,error}=await sb
+    .from('questions')
+    .select('*')
+    .eq('exam_id',S.exam.id)
+    .order('id');
 
-function stopTimer(){if(S.timer)clearInterval(S.timer);S.timer=null}
-function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  S.questions=data||[];
+  S.answers={};
+
+  if(S.exam.question_count && S.questions.length>S.exam.question_count){
+    S.questions=S.questions
+      .sort(()=>Math.random()-0.5)
+      .slice(0,S.exam.question_count);
+  }
+
+  go('take');
+}
 
 function take(){
-let a=S.attempt;
-layout(`<section class="card"><div class="row"><div><b>${esc(a.name)}</b><div class="muted">${esc(a.cls)} • ${esc(a.form.form_number?'Mã đề '+a.form.form_number:'')}</div></div><div class="right timer" id="timer">${fmt(S.seconds)}</div></div><div class="kpi" style="margin-top:10px"><span>${Object.keys(S.answers).length}/${a.questions.length} đã làm</span></div></section>${a.questions.map((x,i)=>{let q=x.questions;return `<section class="card"><div class="muted">Câu ${i+1}/${a.questions.length}</div><div><b>${esc(q.question_text)}</b></div>${(q.options||[]).map((o,j)=>`<button class="option ${S.answers[q.id]===j?'sel':''}" onclick="pick('${q.id}',${j})">${String.fromCharCode(65+j)}. ${esc(o)}</button>`).join('')}</section>`}).join('')}<button class="btn primary" style="width:100%;padding:14px" onclick="submit(false)">NỘP BÀI</button>`)
+  if(!S.questions.length){
+    return layout(`
+      <section class="card">
+        <h2>Đề chưa có câu hỏi</h2>
+        <button class="btn" onclick="go('exams')">Quay lại</button>
+      </section>
+    `);
+  }
+
+  return layout(`
+    <section class="card">
+      <h1>${esc(S.exam.title||S.exam.name)}</h1>
+
+      <div class="question-list">
+        ${S.questions.map((q,i)=>`
+          <div class="question card">
+            <h3>Câu ${i+1}. ${esc(q.question_text||q.question||'')}</h3>
+
+            <div class="options">
+              ${['A','B','C','D'].map(letter=>{
+                const key='option_'+letter.toLowerCase();
+
+                return `
+                  <label class="option">
+                    <input
+                      type="radio"
+                      name="q${q.id}"
+                      value="${letter}"
+                      ${S.answers[q.id]===letter?'checked':''}
+                      onchange="S.answers[${JSON.stringify(q.id)}]='${letter}'"
+                    >
+                    <span>
+                      <b>${letter}.</b>
+                      ${esc(q[key]||'')}
+                    </span>
+                  </label>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <button class="btn primary" onclick="submitExam()">
+        Nộp bài
+      </button>
+    </section>
+  `);
 }
 
-function pick(id,j){S.answers[id]=j;take()}
+async function submitExam(){
+  const name=prompt('Nhập họ và tên:');
+  if(!name)return;
 
-async function submit(auto){
-stopTimer();
-if(!auto&&!confirm('Nộp bài và chấm điểm?')){startTimer();return}
-let a=S.attempt,sess=await sb.auth.getSession();
-let r=await fetch(C.SUPABASE_URL+'/functions/v1/submit-attempt',{
-method:'POST',
-headers:{
-'Content-Type':'application/json',
-'Authorization':'Bearer '+sess.data.session.access_token,
-'apikey':C.SUPABASE_ANON_KEY
-},
-body:JSON.stringify({
-exam_id:a.exam.id,
-exam_form_id:a.form.id,
-student_name:a.name,
-student_class:a.cls,
-answers:Object.entries(S.answers).map(([question_id,chosen_index])=>({question_id,chosen_index}))
-})
-});
-let d=await r.json();
-if(!r.ok)return alert(d.error||'Không thể nộp bài');
-S.result={score:d.score,correct:d.correct,total:d.total,auto};
-go('result')
+  const className=prompt('Nhập lớp:');
+  if(!className)return;
+
+  let correct=0;
+
+  for(const q of S.questions){
+    if(S.answers[q.id]===q.correct_answer){
+      correct++;
+    }
+  }
+
+  const score=Number(
+    ((correct/S.questions.length)*10).toFixed(2)
+  );
+
+  S.result={
+    name,
+    className,
+    correct,
+    total:S.questions.length,
+    score
+  };
+
+  try{
+    await sb.functions.invoke('submit-attempt',{
+      body:{
+        exam_id:S.exam.id,
+        student_name:name,
+        student_class:className,
+        answers:S.answers,
+        score,
+        correct_count:correct,
+        total_questions:S.questions.length
+      }
+    });
+  }catch(e){
+    console.error(e);
+  }
+
+  go('result');
 }
 
 function result(){
-let r=S.result;
-layout(`<section class="card" style="text-align:center"><h1>Kết quả</h1><div style="font-size:44px;font-weight:900">${r.score.toFixed(2)}/10</div><p>${r.correct}/${r.total} câu đúng</p>${r.auto?'<p class="muted">Bài tự động nộp khi hết giờ.</p>':''}<div class="row" style="justify-content:center"><button class="btn primary" onclick="go('home')">LÀM BÀI KHÁC</button><button class="btn" onclick="go('ranking')">XEM XẾP HẠNG</button></div></section>`)
+  if(!S.result){
+    return layout(`
+      <section class="card">
+        <h2>Không có kết quả</h2>
+      </section>
+    `);
+  }
+
+  return layout(`
+    <section class="card result">
+      <h1>Đã nộp bài</h1>
+
+      <h2>${esc(S.result.name)}</h2>
+      <p>Lớp: ${esc(S.result.className)}</p>
+
+      <div class="score">
+        ${S.result.score}/10
+      </div>
+
+      <p>
+        Đúng ${S.result.correct}/${S.result.total} câu
+      </p>
+
+      <div>
+        <button class="btn" onclick="go('home')">
+          Về trang chủ
+        </button>
+
+        <button class="btn" onclick="go('ranking')">
+          Xem xếp hạng
+        </button>
+      </div>
+    </section>
+  `);
 }
 
 async function ranking(){
-let r=await sb.from('attempts').select('student_name,student_class,score,submitted_at,exam_id,exams(title,ranking_enabled,ranking_mode)').order('score',{ascending:false}).limit(100);
-let rows=(r.data||[]).filter(x=>x.exams?.ranking_enabled);
-layout(`<section class="card"><h2>Xếp hạng</h2><p class="muted">Các lượt làm được lưu riêng; cách tính xếp hạng có thể cấu hình theo từng bài.</p><table class="table"><thead><tr><th>#</th><th>Họ tên</th><th>Lớp</th><th>Điểm</th><th>Bài</th></tr></thead><tbody>${rows.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.student_name)}</td><td>${esc(x.student_class)}</td><td><b>${Number(x.score).toFixed(2)}</b></td><td>${esc(x.exams.title)}</td></tr>`).join('')}</tbody></table></section>`)
+  const {data,error}=await sb
+    .from('attempts')
+    .select('*')
+    .order('score',{ascending:false})
+    .order('created_at',{ascending:true})
+    .limit(100);
+
+  if(error)return layout(`
+    <section class="card">
+      <h2>Không tải được xếp hạng</h2>
+      <p>${esc(error.message)}</p>
+    </section>
+  `);
+
+  return layout(`
+    <section class="card">
+      <h1>Xếp hạng</h1>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Họ tên</th>
+              <th>Lớp</th>
+              <th>Điểm</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${(data||[]).map((x,i)=>`
+              <tr>
+                <td>${i+1}</td>
+                <td>${esc(x.student_name||'')}</td>
+                <td>${esc(x.student_class||'')}</td>
+                <td><b>${x.score}</b></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `);
 }
+
+/* =========================
+   ADMIN LOGIN
+========================= */
 
 function login(){
-layout(`<section class="card" style="max-width:440px;margin:auto"><h2>Đăng nhập Admin</h2><div class="field"><label>Email</label><input id="email" type="email"></div><div class="field"><label>Mật khẩu</label><input id="pass" type="password"></div><button class="btn primary" onclick="doLogin()">ĐĂNG NHẬP</button></section>`)
+  return layout(`
+    <section class="card login-card">
+      <h1>Quản trị</h1>
+
+      <p>Đăng nhập tài khoản quản trị.</p>
+
+      <input
+        id="loginEmail"
+        class="input"
+        type="email"
+        placeholder="Email"
+      >
+
+      <input
+        id="loginPassword"
+        class="input"
+        type="password"
+        placeholder="Mật khẩu"
+      >
+
+      <button class="btn primary" onclick="loginAdmin()">
+        Đăng nhập
+      </button>
+
+      <p id="loginMsg"></p>
+    </section>
+  `);
 }
 
-async function doLogin(){
-let r=await sb.auth.signInWithPassword({email:email.value,password:pass.value});
-if(r.error)return alert(r.error.message);
-let p=await sb.from('profiles').select('role').eq('id',r.data.user.id).single();
-if(p.data?.role!=='admin'){await sb.auth.signOut();return alert('Tài khoản không có quyền Admin.')}
-S.user=r.data.user;go('admin')
+async function loginAdmin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+
+  if(!email||!password){
+    alert('Vui lòng nhập đầy đủ email và mật khẩu.');
+    return;
+  }
+
+  const {data,error}=await sb.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  S.user=data.user;
+  S.page='admin';
+  render();
 }
 
-async function logout(){await sb.auth.signOut();S.user=null;go('home')}
+async function logout(){
+  await sb.auth.signOut();
+  S.user=null;
+  S.page=ADMIN_MODE?'login':'home';
+  render();
+}
+
+/* =========================
+   ADMIN
+========================= */
 
 async function admin(){
-if(!sb)return layout(`<section class="card"><h2>Supabase chưa kết nối</h2><p class="muted">${esc(SUPABASE_INIT_ERROR?.message||'Kiểm tra config.js')}</p><button class="btn" onclick="location.reload()">TẢI LẠI</button></section>`);
-layout(`<section class="card"><div class="row"><div><h2>Quản trị</h2><div class="muted">Quản lý câu hỏi, đề thi, lượt làm và AI.</div></div><div class="right"><button class="btn primary" onclick="aiPanel()">AI TẠO ĐỀ</button></div></div></section><section class="grid two"><div class="card"><h3>Tạo đề thủ công</h3><button class="btn" onclick="examPanel()">Tạo bài kiểm tra</button></div><div class="card"><h3>Ngân hàng câu hỏi</h3><button class="btn" onclick="questionPanel()">Xem câu hỏi</button></div><div class="card"><h3>Lượt làm</h3><button class="btn" onclick="adminResults()">Xem kết quả</button></div><div class="card"><h3>Thiết lập</h3><p class="muted">Số lượt làm, xếp hạng, số mã đề và thời gian nằm trong từng đề.</p></div></section>`)
+  if(!S.user){
+    S.page='login';
+    return login();
+  }
+
+  return layout(`
+    <section class="hero">
+      <h1>Quản trị hệ thống</h1>
+      <p>Quản lý môn học, bài học, câu hỏi và đề thi.</p>
+    </section>
+
+    <section class="grid">
+      <button class="card" onclick="adminSubjects()">
+        <h2>Môn học</h2>
+        <p>Quản lý các môn.</p>
+      </button>
+
+      <button class="card" onclick="adminQuestions()">
+        <h2>Ngân hàng câu hỏi</h2>
+        <p>Quản lý câu hỏi.</p>
+      </button>
+
+      <button class="card" onclick="adminExams()">
+        <h2>Đề thi</h2>
+        <p>Tạo và quản lý đề.</p>
+      </button>
+
+      <button class="card" onclick="adminResults()">
+        <h2>Kết quả</h2>
+        <p>Xem bài làm của học sinh.</p>
+      </button>
+    </section>
+  `);
 }
 
-function aiPanel(){
-layout(`<section class="card"><button class="btn" onclick="go('admin')">← Admin</button><h2 style="margin-top:10px">AI Tạo đề</h2><p class="muted">AI tạo câu hỏi; bạn duyệt rồi mới lưu vào ngân hàng.</p><div class="grid two"><div><div class="field"><label>Môn</label><input id="aiSubject" placeholder="Địa lí 12"></div><div class="field"><label>Bài/chủ đề</label><input id="aiLesson" placeholder="Bài 1..."></div><div class="field"><label>Số câu</label><input id="aiCount" type="number" value="10" min="1" max="100"></div><div class="field"><label>Độ khó</label><select id="aiDiff"><option value="mixed">Trộn</option><option value="nhan_biet">Nhận biết</option><option value="thong_hieu">Thông hiểu</option><option value="van_dung">Vận dụng</option></select></div></div><div><div class="field"><label>Nội dung nguồn</label><textarea id="aiSource" placeholder="Dán nội dung bài học hoặc tài liệu vào đây..."></textarea></div><div class="field"><label>Yêu cầu thêm</label><textarea id="aiExtra" placeholder="Ví dụ: bám sát chương trình lớp 12, tránh câu hỏi mơ hồ..."></textarea></div></div></div><button class="btn primary" onclick="generateAI()">TẠO CÂU HỎI</button></section><section id="aiOut"></section>`)
+async function adminSubjects(){
+  const {data,error}=await sb
+    .from('subjects')
+    .select('*')
+    .order('name');
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  layout(`
+    <section class="card">
+      <button class="btn" onclick="go('admin')">← Quản trị</button>
+
+      <h1>Quản lý môn học</h1>
+
+      <input id="subjectName"
+        class="input"
+        placeholder="Tên môn học">
+
+      <input id="subjectDesc"
+        class="input"
+        placeholder="Mô tả">
+
+      <button class="btn primary" onclick="addSubject()">
+        Thêm môn
+      </button>
+    </section>
+
+    <section class="grid">
+      ${(data||[]).map(x=>`
+        <div class="card">
+          <h2>${esc(x.name)}</h2>
+          <p>${esc(x.description||'')}</p>
+        </div>
+      `).join('')}
+    </section>
+  `);
 }
 
-async function generateAI(){
-let out=document.getElementById('aiOut');
-out.innerHTML='<div class="card">Đang tạo...</div>';
-let sess=await sb.auth.getSession();
-let r=await fetch(C.SUPABASE_URL+'/'+C.AI_FUNCTION_PATH,{
-method:'POST',
-headers:{
-'Content-Type':'application/json',
-'Authorization':'Bearer '+sess.data.session.access_token,
-'apikey':C.SUPABASE_ANON_KEY
-},
-body:JSON.stringify({
-subject:aiSubject.value,
-lesson:aiLesson.value,
-count:Number(aiCount.value),
-difficulty:aiDiff.value,
-source:aiSource.value,
-extra:aiExtra.value
-})
-});
-let d=await r.json();
-if(!r.ok||d.error)return out.innerHTML=`<div class="card">Lỗi: ${esc(d.error||'Không tạo được')}</div>`;
-window.__aiQuestions=d.questions||[];
-out.innerHTML=`<div class="card"><h3>AI tạo ${window.__aiQuestions.length} câu</h3>${window.__aiQuestions.map((q,i)=>`<div class="question"><b>Câu ${i+1}. ${esc(q.question_text)}</b>${q.options.map((o,j)=>`<div>${String.fromCharCode(65+j)}. ${esc(o)}</div>`).join('')}<div class="tag">Đáp án: ${String.fromCharCode(65+q.answer_index)} • ${esc(q.difficulty)}</div><p class="muted">${esc(q.explanation||'')}</p></div>`).join('')}<button class="btn good" onclick="saveAIQuestions()">DUYỆT & LƯU VÀO NGÂN HÀNG</button></div>`
+async function addSubject(){
+  const name=document.getElementById('subjectName').value.trim();
+  const description=document.getElementById('subjectDesc').value.trim();
+
+  if(!name){
+    alert('Nhập tên môn.');
+    return;
+  }
+
+  const {error}=await sb
+    .from('subjects')
+    .insert({name,description});
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  adminSubjects();
 }
 
-async function saveAIQuestions(){
-let subjectText=aiSubject.value;
-let sr=await sb.from('subjects').select('id').ilike('name',`%${subjectText}%`).limit(1).single();
-let rows=(window.__aiQuestions||[]).map(q=>({
-subject_id:sr.data?.id||null,
-question_text:q.question_text,
-options:q.options,
-answer_index:q.answer_index,
-explanation:q.explanation,
-difficulty:q.difficulty,
-source_text:aiSource.value,
-created_by:S.user.id,
-approved:true
-}));
-let r=await sb.from('questions').insert(rows);
-if(r.error)return alert(r.error.message);
-alert('Đã lưu câu hỏi.');
-go('admin')
+async function adminQuestions(){
+  const {data,error}=await sb
+    .from('questions')
+    .select('*')
+    .order('id',{ascending:false})
+    .limit(100);
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  layout(`
+    <section class="card">
+      <button class="btn" onclick="go('admin')">← Quản trị</button>
+
+      <h1>Ngân hàng câu hỏi</h1>
+
+      <button class="btn primary"
+        onclick="alert('Bạn có thể dùng chức năng AI để tạo câu hỏi.')">
+        AI tạo câu hỏi
+      </button>
+    </section>
+
+    <section>
+      ${(data||[]).map((q,i)=>`
+        <div class="card">
+          <b>Câu ${i+1}</b>
+          <p>${esc(q.question_text||q.question||'')}</p>
+
+          <p>A. ${esc(q.option_a||'')}</p>
+          <p>B. ${esc(q.option_b||'')}</p>
+          <p>C. ${esc(q.option_c||'')}</p>
+          <p>D. ${esc(q.option_d||'')}</p>
+
+          <p>
+            Đáp án:
+            <b>${esc(q.correct_answer||'')}</b>
+          </p>
+        </div>
+      `).join('')}
+    </section>
+  `);
 }
 
-async function questionPanel(){
-let r=await sb.from('questions').select('id,question_text,answer_index,difficulty,approved,created_at').order('created_at',{ascending:false}).limit(100);
-layout(`<section class="card"><div class="row"><button class="btn" onclick="go('admin')">← Admin</button><h2>Câu hỏi</h2></div>${(r.data||[]).map((q,i)=>`<div class="question"><b>${i+1}. ${esc(q.question_text)}</b><div class="muted">Đáp án ${String.fromCharCode(65+q.answer_index)} • ${esc(q.difficulty)} • ${q.approved?'Đã duyệt':'Chưa duyệt'}</div></div>`).join('')}</section>`)
-}
+async function adminExams(){
+  const {data,error}=await sb
+    .from('exams')
+    .select('*')
+    .order('created_at',{ascending:false});
 
-async function examPanel(){
-let subs=await sb.from('subjects').select('*').eq('is_active',true);
-layout(`<section class="card"><button class="btn" onclick="go('admin')">← Admin</button><h2 style="margin-top:10px">Tạo bài kiểm tra</h2><div class="field"><label>Môn</label><select id="exSub">${(subs.data||[]).map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></div><div class="field"><label>Tiêu đề</label><input id="exTitle" placeholder="Địa lí 12 - Bài 1"></div><div class="grid three"><div class="field"><label>Số câu</label><input id="exCount" type="number" value="20"></div><div class="field"><label>Số mã đề</label><input id="exForms" type="number" value="4"></div><div class="field"><label>Thời gian (phút)</label><input id="exMin" type="number" value="15"></div></div><div class="grid two"><div class="field"><label>Số lượt làm / học sinh (0 = không giới hạn)</label><input id="exLimit" type="number" value="0"></div><div class="field"><label>Cách xếp hạng</label><select id="exRank"><option value="best">Điểm cao nhất</option><option value="latest">Lần gần nhất</option><option value="average">Điểm trung bình</option><option value="first">Lần đầu</option></select></div></div><label><input id="exPub" type="checkbox"> Mở bài ngay</label><br><br><button class="btn primary" onclick="createExam()">TẠO VÀ SINH MÃ ĐỀ</button></section>`)
-}
+  if(error){
+    alert(error.message);
+    return;
+  }
 
-async function createExam(){
-let e={
-subject_id:exSub.value,
-lesson_id:(S.lesson||null),
-title:exTitle.value,
-minutes:Number(exMin.value),
-question_count:Number(exCount.value),
-form_count:Number(exForms.value),
-attempt_limit:Number(exLimit.value),
-ranking_mode:exRank.value,
-is_published:exPub.checked,
-created_by:S.user.id
-};
-let ins=await sb.from('exams').insert(e).select().single();
-if(ins.error)return alert(ins.error.message);
-let qr=await sb.from('questions').select('id').eq('subject_id',e.subject_id).eq('approved',true);
-let ids=(qr.data||[]).map(x=>x.id);
-if(ids.length<e.question_count)return alert(`Đã tạo bài nhưng ngân hàng chỉ có ${ids.length} câu, cần ${e.question_count} câu. Hãy thêm câu rồi tạo lại mã đề.`);
-for(let f=1;f<=e.form_count;f++){
-let shuffled=[...ids].sort(()=>Math.random()-.5).slice(0,e.question_count);
-let fi=await sb.from('exam_forms').insert({exam_id:ins.data.id,form_number:f}).select().single();
-if(fi.error)continue;
-await sb.from('exam_questions').insert(shuffled.map((qid,i)=>({exam_form_id:fi.data.id,question_id:qid,position:i+1})))
-}
-alert('Đã tạo bài và mã đề.');
-go('admin')
+  layout(`
+    <section class="card">
+      <button class="btn" onclick="go('admin')">← Quản trị</button>
+
+      <h1>Quản lý đề thi</h1>
+    </section>
+
+    <section class="grid">
+      ${(data||[]).map(x=>`
+        <div class="card">
+          <h2>${esc(x.title||x.name)}</h2>
+
+          <p>
+            ${x.question_count||0} câu
+            ${x.duration_minutes?` • ${x.duration_minutes} phút`:''}
+          </p>
+
+          <p>
+            Trạng thái:
+            ${x.is_published?'Đang mở':'Đang đóng'}
+          </p>
+        </div>
+      `).join('')}
+    </section>
+  `);
 }
 
 async function adminResults(){
-let r=await sb.from('attempts').select('student_name,student_class,score,total_correct,total_questions,submitted_at,exams(title)').order('submitted_at',{ascending:false}).limit(300);
-layout(`<section class="card"><div class="row"><button class="btn" onclick="go('admin')">← Admin</button><h2>Kết quả</h2></div><table class="table"><thead><tr><th>Họ tên</th><th>Lớp</th><th>Bài</th><th>Điểm</th><th>Đúng</th><th>Thời gian</th></tr></thead><tbody>${(r.data||[]).map(x=>`<tr><td>${esc(x.student_name)}</td><td>${esc(x.student_class)}</td><td>${esc(x.exams?.title||'')}</td><td>${Number(x.score).toFixed(2)}</td><td>${x.total_correct}/${x.total_questions}</td><td>${new Date(x.submitted_at).toLocaleString('vi-VN')}</td></tr>`).join('')}</tbody></table></section>`)
+  const {data,error}=await sb
+    .from('attempts')
+    .select('*')
+    .order('created_at',{ascending:false})
+    .limit(200);
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  layout(`
+    <section class="card">
+      <button class="btn" onclick="go('admin')">← Quản trị</button>
+
+      <h1>Kết quả học sinh</h1>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Họ tên</th>
+              <th>Lớp</th>
+              <th>Điểm</th>
+              <th>Thời gian</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${(data||[]).map(x=>`
+              <tr>
+                <td>${esc(x.student_name||'')}</td>
+                <td>${esc(x.student_class||'')}</td>
+                <td><b>${x.score}</b></td>
+                <td>${esc(x.created_at||'')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `);
 }
 
-sb&&sb.auth.onAuthStateChange((_e,session)=>{S.user=session?.user||null});
-render();
+/* =========================
+   RENDER
+========================= */
+
+async function render(){
+
+  if(ADMIN_MODE){
+
+    if(S.page==='login')
+      return login();
+
+    if(S.page==='admin')
+      return admin();
+
+    if(!S.user){
+      S.page='login';
+      return login();
+    }
+
+    return admin();
+  }
+
+  if(S.page==='home')
+    return home();
+
+  if(S.page==='lessons')
+    return lessons();
+
+  if(S.page==='exams')
+    return exams();
+
+  if(S.page==='info')
+    return info();
+
+  if(S.page==='take')
+    return take();
+
+  if(S.page==='result')
+    return result();
+
+  if(S.page==='ranking')
+    return ranking();
+}
+
+/* =========================
+   AUTH
+========================= */
+
+(async()=>{
+
+  if(sb){
+    const {
+      data:{session}
+    }=await sb.auth.getSession();
+
+    S.user=session?.user||null;
+  }
+
+  S.page=ADMIN_MODE
+    ?(S.user?'admin':'login')
+    :'home';
+
+  render();
+
+  if(sb){
+
+    sb.auth.onAuthStateChange(
+      (_e,session)=>{
+
+        S.user=session?.user||null;
+
+        if(ADMIN_MODE){
+          S.page=S.user?'admin':'login';
+        }
+
+        render();
+      }
+    );
+
+  }
+
+})();
