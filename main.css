@@ -10,11 +10,17 @@
   --bad:#ff526f;
 }
 
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
 
 body{
   margin:0;
-  background:radial-gradient(circle at 10% 0,#272261,#070a18 42%);
+  background:radial-gradient(
+    circle at 10% 0,
+    #272261,
+    #070a18 42%
+  );
   color:var(--text);
   font-family:Inter,system-ui,Arial,sans-serif;
 }
@@ -45,7 +51,11 @@ body{
 }
 
 .card{
-  background:linear-gradient(180deg,#121938f5,#0c112cf5);
+  background:linear-gradient(
+    180deg,
+    #121938f5,
+    #0c112cf5
+  );
   border:1px solid var(--line);
   border-radius:17px;
   padding:16px;
@@ -66,10 +76,10 @@ body{
   grid-template-columns:repeat(3,1fr);
 }
 
-/* =========================
+/* =========================================================
    MÔN HỌC
-   2 MÔN / 1 HÀNG
-   ========================= */
+   LUÔN 2 MÔN / 1 HÀNG
+   ========================================================= */
 
 .subjects{
   display:grid;
@@ -157,11 +167,14 @@ body{
   color:#9ca9d8;
 }
 
-/* =========================
+/* =========================================================
    BUTTON
-   ========================= */
+   ========================================================= */
 
-button,input,select,textarea{
+button,
+input,
+select,
+textarea{
   font:inherit;
 }
 
@@ -183,7 +196,11 @@ button{
 }
 
 .primary{
-  background:linear-gradient(135deg,var(--a),var(--b));
+  background:linear-gradient(
+    135deg,
+    var(--a),
+    var(--b)
+  );
   border:0;
 }
 
@@ -195,9 +212,9 @@ button{
   background:#126c50;
 }
 
-/* =========================
+/* =========================================================
    FORM
-   ========================= */
+   ========================================================= */
 
 .field{
   margin:9px 0;
@@ -210,12 +227,17 @@ button{
   margin-bottom:5px;
 }
 
-input,select,textarea{
+input,
+select,
+textarea{
   width:100%;
+
   background:#080e28;
   color:#fff;
+
   border:1px solid #3b487a;
   border-radius:10px;
+
   padding:10px;
 }
 
@@ -227,7 +249,9 @@ textarea{
   color:var(--muted);
 }
 
-h1,h2,h3{
+h1,
+h2,
+h3{
   margin:0 0 9px;
 }
 
@@ -248,7 +272,8 @@ h1,h2,h3{
   flex-wrap:wrap;
 }
 
-.kpi span,.tag{
+.kpi span,
+.tag{
   padding:8px 10px;
   background:#0b1230;
   border:1px solid #303b6b;
@@ -271,9 +296,9 @@ h1,h2,h3{
   padding:35px;
 }
 
-/* =========================
+/* =========================================================
    ADMIN MÔN HỌC
-   ========================= */
+   ========================================================= */
 
 .subject-admin-list{
   display:grid;
@@ -320,6 +345,12 @@ h1,h2,h3{
   color:var(--muted);
 }
 
+.subject-admin-actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
 .status-active{
   color:#46dfa7;
 }
@@ -328,13 +359,14 @@ h1,h2,h3{
   color:#ff7189;
 }
 
-/* =========================
+/* =========================================================
    EXAM / QUESTION
-   ========================= */
+   ========================================================= */
 
 .exam{
   display:block;
   width:100%;
+
   text-align:left;
 
   background:#121a3c;
@@ -349,12 +381,18 @@ h1,h2,h3{
 
 .option{
   padding:10px;
+
   border:1px solid #303b6b;
   border-radius:9px;
+
   background:#11183b;
+
   margin:6px 0;
+
   text-align:left;
+
   width:100%;
+
   color:#fff;
 }
 
@@ -363,12 +401,20 @@ h1,h2,h3{
   background:#20285b;
 }
 
+.question-card{
+  margin-bottom:20px;
+}
+
 .timer{
   font-weight:900;
   font-size:22px;
+
   background:#211d62;
+
   border:1px solid #6678ff;
+
   padding:8px 12px;
+
   border-radius:11px;
 }
 
@@ -377,15 +423,16 @@ h1,h2,h3{
   border-collapse:collapse;
 }
 
-.table th,.table td{
+.table th,
+.table td{
   padding:8px;
   border-bottom:1px solid #2b3561;
   text-align:left;
 }
 
-/* =========================
+/* =========================================================
    ADMIN
-   ========================= */
+   ========================================================= */
 
 .admin-head{
   display:flex;
@@ -409,6 +456,7 @@ h1,h2,h3{
   color:#fff;
 
   border:1px solid #3b487a;
+
   border-radius:15px;
 
   padding:18px;
@@ -428,9 +476,9 @@ h1,h2,h3{
   padding:12px;
 }
 
-/* =========================
+/* =========================================================
    MOBILE
-   ========================= */
+   ========================================================= */
 
 @media(max-width:720px){
 
@@ -443,14 +491,17 @@ h1,h2,h3{
     flex-direction:column;
   }
 
-  .two,.three{
+  .two,
+  .three{
     grid-template-columns:1fr;
   }
 
-  /* điện thoại: 1 môn / hàng */
+  /* QUAN TRỌNG:
+     MOBILE VẪN 2 MÔN / 1 HÀNG */
 
   .subjects{
-    grid-template-columns:1fr;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
   }
 
   .admin-grid{
@@ -460,7 +511,15 @@ h1,h2,h3{
   .subject-admin-item{
     align-items:flex-start;
   }
+
+  .subject-admin-actions{
+    width:100%;
+  }
 }
+
+/* =========================================================
+   MÀN HÌNH NHỎ
+   ========================================================= */
 
 @media(max-width:440px){
 
@@ -468,18 +527,37 @@ h1,h2,h3{
     grid-template-columns:1fr;
   }
 
+  .subjects{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+  }
+
   .subject{
-    min-height:92px;
-    padding:12px;
+    min-height:88px;
+    padding:9px;
+    gap:7px;
   }
 
   .subject-icon{
-    width:50px;
-    height:50px;
-    font-size:26px;
+    width:42px;
+    height:42px;
+    font-size:22px;
+    border-radius:11px;
   }
 
   .subject-body h3{
-    font-size:16px;
+    font-size:14px;
+  }
+
+  .subject-body p{
+    font-size:11px;
+  }
+
+  .arrow{
+    font-size:20px;
+  }
+
+  .subject-admin-item{
+    flex-wrap:wrap;
   }
 }
